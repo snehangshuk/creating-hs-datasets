@@ -1,117 +1,61 @@
-"""TODO(squad_v2): Add a description here."""
+"""TODO(test_dataset_targz): Add a description here."""
 
 
 import json
-
 import datasets
-from datasets.tasks import QuestionAnsweringExtractive
-
-
 # TODO: BibTeX citation
 _CITATION = " "
 
-_DESCRIPTION = " "
+_DESCRIPTION = "This is a dataset for testing the dataset builder script."
 
-_URL = "https://rajpurkar.github.io/SQuAD-explorer/dataset/"
-_URLS = {
-    "train": _URL + "train-v2.0.json",
-    "dev": _URL + "dev-v2.0.json",
-}
+_URL = "https://github.com/snehangshuk/creating-hs-datasets/raw/main/00_get_started/dataset.tar.gz"
 
 
-class SquadV2Config(datasets.BuilderConfig):
-    """BuilderConfig for SQUAD."""
-
-    def __init__(self, **kwargs):
-        """BuilderConfig for SQUADV2.
-        Args:
-          **kwargs: keyword arguments forwarded to super.
-        """
-        super(SquadV2Config, self).__init__(**kwargs)
-
-
-class SquadV2(datasets.GeneratorBasedBuilder):
-    """TODO(squad_v2): Short description of my dataset."""
-
-    # TODO(squad_v2): Set up version.
-    BUILDER_CONFIGS = [
-        SquadV2Config(name="squad_v2", version=datasets.Version("2.0.0"), description="SQuAD plaint text version 2"),
-    ]
-
+class test_dataset_targz(datasets.GeneratorBasedBuilder):
     def _info(self):
-        # TODO(squad_v2): Specifies the datasets.DatasetInfo object
+        # Specifies the datasets.DatasetInfo object
         return datasets.DatasetInfo(
             # This is the description that will appear on the datasets page.
             description=_DESCRIPTION,
             # datasets.features.FeatureConnectors
             features=datasets.Features(
                 {
-                    "id": datasets.Value("string"),
-                    "title": datasets.Value("string"),
-                    "context": datasets.Value("string"),
-                    "question": datasets.Value("string"),
-                    "answers": datasets.features.Sequence(
-                        {
-                            "text": datasets.Value("string"),
-                            "answer_start": datasets.Value("int32"),
-                        }
-                    ),
-                    # These are the features of your dataset like images, labels ...
+                    "city": datasets.Value("string"),
+                    "country": datasets.Value("string"),
+                    "region": datasets.Value("string"),
+                    "continent": datasets.Value("string"),
+                    "latitude": datasets.Value("float64"),
+                    "longitude": datasets.Value("float64"),
+                    "x": datasets.Value("float64"),
+                    "y": datasets.Value("float64"),
+                    "z": datasets.Value("float64")
                 }
             ),
-            # If there's a common (input, target) tuple from the features,
-            # specify them here. They'll be used if as_supervised=True in
-            # builder.as_dataset.
-            supervised_keys=None,
-            # Homepage of the dataset for documentation
-            homepage="https://rajpurkar.github.io/SQuAD-explorer/",
-            citation=_CITATION,
-            task_templates=[
-                QuestionAnsweringExtractive(
-                    question_column="question", context_column="context", answers_column="answers"
-                )
-            ],
         )
 
     def _split_generators(self, dl_manager):
         """Returns SplitGenerators."""
-        # TODO(squad_v2): Downloads the data and defines the splits
+        # Downloads the data and defines the splits
         # dl_manager is a datasets.download.DownloadManager that can be used to
         # download and extract URLs
-        urls_to_download = _URLS
-        downloaded_files = dl_manager.download_and_extract(urls_to_download)
+        urls_to_download = _URL
+        path = dl_manager.download_and_extract(urls_to_download)
 
         return [
-            datasets.SplitGenerator(name=datasets.Split.TRAIN, gen_kwargs={"filepath": downloaded_files["train"]}),
-            datasets.SplitGenerator(name=datasets.Split.VALIDATION, gen_kwargs={"filepath": downloaded_files["dev"]}),
+            datasets.SplitGenerator(
+             name=datasets.Split.TRAIN,
+             gen_kwargs={"filepath": path+"/dataset.jsonl"}
+            )
         ]
 
     def _generate_examples(self, filepath):
         """Yields examples."""
-        # TODO(squad_v2): Yields (key, example) tuples from the dataset
-        with open(filepath, encoding="utf-8") as f:
-            squad = json.load(f)
-            for example in squad["data"]:
-                title = example.get("title", "")
-                for paragraph in example["paragraphs"]:
-                    context = paragraph["context"]  # do not strip leading blank spaces GH-2585
-                    for qa in paragraph["qas"]:
-                        question = qa["question"]
-                        id_ = qa["id"]
-
-                        answer_starts = [answer["answer_start"] for answer in qa["answers"]]
-                        answers = [answer["text"] for answer in qa["answers"]]
-
-                        # Features currently used are "context", "question", and "answers".
-                        # Others are extracted here for the ease of future expansions.
-                        yield id_, {
-                            "title": title,
-                            "context": context,
-                            "question": question,
-                            "id": id_,
-                            "answers": {
-                                "answer_start": answer_starts,
-                                "text": answers,
-                            },
-                        }
-
+        # Yields (key, example) tuples from the dataset
+        idx = 0
+        # open json file and read line by line
+        with open(filepath, encoding="utf-8") as fp:
+            for line in fp:
+                # load line as json object
+                obj = json.loads(line)
+                yield idx, obj
+                idx += 1
